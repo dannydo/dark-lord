@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wings AI Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-color: #050505;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #standalone-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #050505 100%);
+        }
+
+        .background-decoration {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            background-image: 
+                linear-gradient(rgba(252, 195, 58, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(252, 195, 58, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Test Controls Styling */
+        .wings-test-controls {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            width: 320px;
+            z-index: 1000;
+        }
+
+        /* Ensure the modal is visible and centered */
+        .wings-ai-suggestion-box {
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            margin: 0 !important;
+            transform: none !important;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            width: 850px !important;
+            height: auto !important;
+            min-height: 800px;
+        }
+
+        .wings-ai-fab {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-decoration"></div>
+    <div id="standalone-container">
+        <div class="wings-test-controls" id="test-controls-anchor"></div>
+        <!-- Suggestion Modal will be injected here -->
+    </div>
+
+    <!-- Mocks and Core Logic -->
+    <script src="worker.js?v=3"></script>
+    <script src="app.js?v=3"></script>
+</body>
+</html>

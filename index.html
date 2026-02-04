@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian Matrix | AI Agent Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+</head>
+<body>
+    <div class="matrix-bg"></div>
+    
+    <main class="dashboard-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo-area">
+                <div class="logo-orb"></div>
+                <h1>THE OBSIDIAN <span class="highlight">MATRIX</span></h1>
+            </div>
+            <div class="system-status">
+                <span class="status-label">SYSTEM UPTIME:</span>
+                <span class="status-value">99.98%</span>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Left Panel: Data Streams -->
+            <aside class="panel glass log-panel scrollable">
+                <div class="panel-header">
+                    <h2>REAL-TIME DATA STREAMS</h2>
+                    <span class="dot-pulse"></span>
+                </div>
+                <div class="stream-content" id="data-stream">
+                    <!-- Dynamic Stream Content -->
+                </div>
+            </aside>
+
+            <!-- Center: Neural Nexus -->
+            <section class="nexus-area">
+                <div class="nexus-visualization" id="nexus-canvas">
+                    <div class="nexus-core-bg"></div>
+                    <!-- SVG Layer for Neural Lines -->
+                    <svg id="nexus-svg" class="nexus-svg-layer"></svg>
+                    
+                    <!-- Agent Nodes will be injected here -->
+                    <div class="central-core">
+                        <div class="core-glow"></div>
+                        <div class="core-icon"></div>
+                    </div>
+                </div>
+                <div class="nexus-overlay">
+                    <div class="agent-count">
+                        <span class="count">06</span>
+                        <span class="label">ACTIVE AGENTS</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Terminal -->
+            <aside class="panel glass terminal-panel">
+                <div class="panel-header">
+                    <h2>MISSION CONTROL LOGS</h2>
+                    <div class="panel-controls">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+                <div class="terminal-content" id="terminal-logs">
+                    <p class="log-entry system">> SYSTEM DIAGNOSTICS RUNNING...</p>
+                    <p class="log-entry success">> OPTIMIZATION COMPLETE.</p>
+                    <p class="log-entry flash">> WAITING FOR INPUT...</p>
+                </div>
+            </aside>
+
+            <!-- Bottom: Analytics -->
+            <section class="panel glass analytics-panel performance">
+                <div class="panel-header">
+                    <h2>PERFORMANCE METRICS</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="performance-chart"></canvas>
+                </div>
+            </section>
+
+            <section class="panel glass analytics-panel utilization">
+                <div class="panel-header">
+                    <h2>RESOURCE UTILIZATION</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="utilization-chart"></canvas>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Report Modal -->
+    <div id="report-modal" class="modal-overlay">
+        <div class="modal-container glass">
+            <div class="modal-header">
+                <div class="header-titles">
+                    <h2>SYSTEM ANALYSIS REPORT</h2>
+                    <div class="report-id">REF-ID: <span id="modal-ref-id">---</span></div>
+                </div>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-section">
+                    <div class="section-label">AI_SUMMARY.exe</div>
+                    <p id="report-summary-text" class="summary-text">Waiting for data stream...</p>
+                </div>
+                <div class="details-section">
+                    <div class="section-label">RAW_DATA_STREAM</div>
+                    <div id="report-details" class="report-details scrollable">
+                        <!-- Full report will be injected here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="system-tag">AUTH: NEXUS_ALPHA</span>
+                <span class="timestamp" id="modal-timestamp">---</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

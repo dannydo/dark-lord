@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --wings-bg-deep: #0f0a1a;
+            --wings-bg-card: #14101d;
+            --wings-bg-input: #1a1625;
+            --wings-gold: #fcc33a;
+            --wings-gold-hover: #e5b130;
+            --wings-text-main: #ffffff;
+            --wings-text-dim: #94a3b8;
+            --wings-border: rgba(252, 195, 58, 0.15);
+            --wings-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            width: 360px;
+            padding: 0;
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--wings-bg-deep);
+            color: var(--wings-text-main);
+            overflow-x: hidden;
+        }
+
+        /* Header Area */
+        .wings-header {
+            padding: 24px 20px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .wings-logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .wings-logo-box {
+            width: 50px;
+            height: 44px;
+            background: var(--wings-gold); /* Gold border effect */
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .wings-logo-inner {
+            width: calc(100% - 2px);
+            height: calc(100% - 2px);
+            background: #000;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wings-logo-inner img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            filter: brightness(1.2) drop-shadow(0 0 4px var(--wings-gold));
+        }
+
+        .wings-title-area h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #fff;
+            line-height: 1.1;
+        }
+
+        .wings-title-area p {
+            margin: 2px 0 0;
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--wings-text-dim);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .wings-close-btn {
+            background: none;
+            border: none;
+            color: var(--wings-text-dim);
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .wings-close-btn:hover { color: #ffffff; }
+
+        /* Content Area */
+        .wings-content { padding: 0 20px 24px; }
+
+        /* Env Switcher */
+        .wings-env-toggle {
+            display: flex;
+            background: #1e1b26;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 12px; /* Reduced gap */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .wings-env-toggle label {
+            flex: 1;
+            margin: 0;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.2s;
+            color: var(--wings-text-dim);
+        }
+
+        .wings-env-toggle input { display: none; }
+        
+        .wings-env-toggle label:has(input:checked) {
+            background: #2a2533;
+            color: var(--wings-gold);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--wings-border);
+        }
+
+        /* Staff Info Card */
+        .wings-staff-card {
+            background: var(--wings-bg-card);
+            border: 1px solid var(--wings-border);
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--wings-shadow);
+        }
+
+        .wings-staff-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .wings-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            border: 1px solid var(--wings-gold);
+            overflow: hidden;
+        }
+        
+        .wings-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .wings-staff-details { line-height: 1.2; }
+        .wings-staff-details .label { font-size: 9px; color: var(--wings-text-dim); display: block; margin-bottom: 2px; }
+        .wings-staff-details .name { font-size: 13px; font-weight: 700; color: #fff; }
+
+        .wings-logout-btn {
+            background: #2a2533;
+            color: var(--wings-text-dim);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wings-logout-btn:hover { background: #352f40; color: #ff5e5e; }
+
+        /* Forms */
+        .wings-input-group { margin-bottom: 24px; position: relative; }
+        
+        .wings-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .wings-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--wings-gold);
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .wings-hint { font-size: 9px; color: var(--wings-text-dim); font-style: italic; }
+
+        .wings-input-wrapper { position: relative; }
+
+        input[type="text"], input[type="password"], input[type="tel"], textarea {
+            width: 100%;
+            background: var(--wings-bg-input);
+            border: 1px solid var(--wings-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--wings-gold);
+            background: #211c2e;
+            box-shadow: 0 0 0 2px rgba(252, 195, 58, 0.1);
+        }
+
+        textarea {
+            height: 120px;
+            resize: none;
+            line-height: 1.5;
+            font-size: 12px;
+        }
+
+        .wings-toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--wings-text-dim);
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+        }
+
+        /* Save Button */
+        .wings-save-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--wings-gold);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(252, 195, 58, 0.3);
+            margin-bottom: 16px;
+        }
+
+        .wings-save-btn:hover {
+            background: var(--wings-gold-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(252, 195, 58, 0.4);
+        }
+
+        .wings-save-btn:active { transform: translateY(0); }
+        .wings-save-btn:disabled { background: #4a4a4a; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .wings-footer {
+            text-align: center;
+            font-size: 10px;
+            color: #52525b;
+            letter-spacing: 0.5px;
+        }
+
+        .wings-footer a { color: #52525b; text-decoration: none; margin-left: 8px; }
+        .wings-footer a:hover { color: var(--wings-text-dim); }
+
+        /* Status Message */
+        #status {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            min-height: 16px;
+        }
+        .error { color: #ff5e5e; }
+        .success { color: #22c55e; }
+
+        /* Views */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* Auth/Pending specific */
+        .wings-auth-header { text-align: center; margin-bottom: 30px; }
+        .wings-auth-header .icon { font-size: 40px; margin-bottom: 12px; }
+        .wings-auth-header h2 { margin: 0; font-size: 20px; color: var(--wings-gold); }
+        .wings-auth-header p { margin: 8px 0 0; font-size: 13px; color: var(--wings-text-dim); }
+
+        .otp-input {
+            letter-spacing: 8px;
+            text-align: center;
+            font-size: 24px !important;
+            font-weight: 700;
+            color: var(--wings-gold) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="wings-header">
+        <div class="wings-logo-group">
+            <div class="wings-logo-box">
+                <div class="wings-logo-inner">
+                    <img src="assets/wing_single.png" alt="W">
+                </div>
+            </div>
+            <div class="wings-title-area">
+                <h1>WINGS AI</h1>
+                <p>VUI VẺ - ÂN CẦN - CHÂN THÀNH - KHOA HỌC</p>
+            </div>
+        </div>
+        <button class="wings-close-btn" id="popup-close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+
+    <div class="wings-content">
+        <!-- Env Switcher -->
+        <div class="wings-env-toggle">
+            <label><input type="radio" name="api_env" value="orb" checked> DEV (Orb)</label>
+            <label><input type="radio" name="api_env" value="live"> PROD (Live)</label>
+        </div>
+
+        <div id="status"></div>
+
+        <!-- AUTH VIEW -->
+        <div id="view-auth" class="view">
+            <div id="phone-section">
+                <div class="wings-auth-header">
+                    <div class="icon">🦋</div>
+                    <h2>Staff Access</h2>
+                    <p>Enter your phone to receive Zalo OTP</p>
+                </div>
+                <div class="wings-input-group">
+                    <span class="wings-label">Phone Number</span>
+                    <input type="tel" id="staffPhone" placeholder="09xx xxx xxx">
+                </div>
+                <button class="wings-save-btn" id="requestOtp">Request Zalo OTP</button>
+            </div>
+            
+            <div id="otp-section" style="display: none;">
+                <div class="wings-auth-header">
+                    <div class="icon">💬</div>
+                    <h2>Verify Code</h2>
+                    <p>6-digit code sent to your Zalo</p>
+                </div>
+                <div class="wings-input-group">
+                    <span class="wings-label">Verification Code</span>
+                    <input type="text" id="otpCode" placeholder="······" maxlength="6" class="otp-input">
+                </div>
+                <button class="wings-save-btn" id="verifyOtp">Verify & Login</button>
+                <button id="backToPhone" style="width: 100%; background: none; border: none; color: var(--wings-text-dim); font-size: 11px; margin-top: 12px; cursor: pointer;">Change Phone Number</button>
+            </div>
+        </div>
+
+        <!-- PENDING VIEW -->
+        <div id="view-pending" class="view">
+            <div class="wings-auth-header" style="margin-top: 20px;">
+                <div class="icon">⏳</div>
+                <h2>Approval Pending</h2>
+                <p>Hello <span id="pending-name" style="color: #fff; font-weight: 700;">Staff</span>, your device is waiting for an Admin to approve access.</p>
+            </div>
+            <button class="wings-save-btn" id="checkStatus">Check Status Again</button>
+            <button id="logoutPending" style="width: 100%; background: none; border: none; color: #ff5e5e; font-size: 12px; margin-top: 16px; font-weight: 600; cursor: pointer;">Sign Out</button>
+        </div>
+
+        <!-- MAIN APP VIEW (Approved) -->
+        <div id="view-main" class="view">
+            <div class="wings-staff-card">
+                <div class="wings-staff-user">
+                    <div class="wings-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Staff&background=1a1625&color=fcc33a&bold=true" id="staff-avatar" alt="Avatar">
+                    </div>
+                    <div class="wings-staff-details">
+                        <span class="label">Logged in as</span>
+                        <span class="name" id="staff-name">Danny Do</span>
+                    </div>
+                </div>
+                <button class="wings-logout-btn" id="logout">Logout</button>
+            </div>
+
+            <div class="wings-input-group">
+                <span class="wings-label">Gemini API Key</span>
+                <div class="wings-input-wrapper">
+                    <input type="password" id="apiKey" placeholder="••••••••••••••••">
+                    <button class="wings-toggle-password" id="togglePassword">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="wings-input-group">
+                <div class="wings-label-row">
+                    <span class="wings-label">Business Context & Rules</span>
+                    <span class="wings-hint">Markdown supported</span>
+                </div>
+                <textarea id="context" placeholder="# IDENTITY
+Bạn là chuyên viên tư vấn cao cấp tại Wings Lashes (Nối Mi Bóng Tối)..."></textarea>
+            </div>
+
+            <button class="wings-save-btn" id="save">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Settings
+            </button>
+        </div>
+
+        <div class="wings-footer">
+            Wings AI v4.0.0 • <a href="#">Support</a>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "Wings Lashes AI Copilot",
+    "version": "4.1.2",
+  "description": "Premium AI-powered automated replies for Pancake using Google Gemini.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://*.pancake.biz/*",
+    "https://*.pancake.vn/*",
+    "https://*.pages.fm/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.wingslashes.com/*",
+    "http://api.orb/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/*.png", "gallery_data.json"],
+      "matches": [
+        "https://*.pancake.biz/*",
+        "https://*.pancake.vn/*",
+        "https://*.pages.fm/*"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.pancake.biz/*",
+        "https://*.pancake.vn/*",
+        "https://*.pages.fm/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

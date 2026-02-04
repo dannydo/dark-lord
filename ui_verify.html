@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wings AI UI Verification</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; padding: 50px; }
+        .wings-ai-suggestion-box {
+            width: 800px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .wings-ai-header { display: flex; align-items: center; margin-bottom: 20px; }
+        .wings-ai-row { display: flex; align-items: center; gap: 15px; }
+        .wings-ai-trigger-btn { background: #fcc33a; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
+        
+        /* THE ACTUAL UI BEING TESTED */
+        .wings-ai-client-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-start;
+        }
+        .icon-column {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            width: 32px;
+            min-width: 32px;
+            line-height: 1.1;
+        }
+        .text-column {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0px;
+            line-height: 1.1;
+        }
+    </style>
+</head>
+<body>
+    <div class="wings-ai-suggestion-box">
+        <div class="wings-ai-row">
+            <button class="wings-ai-trigger-btn">AI Suggestion</button>
+            
+            <div class="wings-ai-client-info">
+                <div class="icon-column">
+                    <span style="font-size: 13px;">💎</span>
+                    <span style="font-size: 11px; color: #fcc33a; font-weight: 800;">234</span>
+                </div>
+                <div class="text-column">
+                    <span style="font-weight: 700; font-size: 13px;">Trân Trần</span>
+                    <span style="font-size: 11px; color: rgba(255,255,255,0.6);">0902925972</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

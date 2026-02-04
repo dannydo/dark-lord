@@ -1,0 +1,17 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Build artifacts and zips
+*.zip
+node_modules/
+dist/
+build/
+
+# Antigravity brain/logs (keeping skills since they are documentation)
+.agent/*/brain/
+.agent/*/logs/
+.agent/workflow_logs/

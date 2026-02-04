@@ -1,0 +1,12 @@
+{
+  "name": "dark-lord-dashboard",
+  "version": "1.0.0",
+  "description": "Obsidian Matrix - AI Agent Manager Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

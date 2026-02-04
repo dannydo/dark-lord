@@ -1,0 +1,44 @@
+[
+    {
+        "id": "ultralight-natural",
+        "name": "UltraLight",
+        "subtitle": "Natural",
+        "url": "https://i.imgur.com/Kz5qJ4L.png",
+        "tags": ["natural", "light"]
+    },
+    {
+        "id": "hybrid-wispy",
+        "name": "Hybrid",
+        "subtitle": "Wispy",
+        "url": "https://i.imgur.com/7A2qL8F.png",
+        "tags": ["hybrid", "wispy"]
+    },
+    {
+        "id": "volume-drama",
+        "name": "Volume 5D",
+        "subtitle": "Drama",
+        "url": "https://i.imgur.com/9yX1M2G.png",
+        "tags": ["volume", "drama"]
+    },
+    {
+        "id": "mega-blackout",
+        "name": "Mega",
+        "subtitle": "Blackout",
+        "url": "https://i.imgur.com/s4aD2fH.png",
+        "tags": ["mega", "volume", "bold"]
+    },
+    {
+        "id": "classic-timeless",
+        "name": "Classic",
+        "subtitle": "Timeless",
+        "url": "https://i.imgur.com/3dC4v5B.png",
+        "tags": ["classic", "timeless"]
+    },
+    {
+        "id": "trending-foxy",
+        "name": "Trending",
+        "subtitle": "Foxy",
+        "url": "https://i.imgur.com/6gH7j9K.png",
+        "tags": ["trending", "foxy"]
+    }
+]
