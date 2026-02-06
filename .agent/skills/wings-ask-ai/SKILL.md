@@ -49,7 +49,7 @@ description: Specification for the "Ask Wings AI" feature, enabling direct user-
     color: #fff;
     font-size: 13px;
 }
-
+"
 .wings-ai-ask-send-btn {
     position: absolute;
     right: 8px;

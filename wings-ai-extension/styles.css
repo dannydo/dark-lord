@@ -33,7 +33,7 @@
     font-family: var(--wings-font);
     color: var(--wings-text-main);
     padding: 0; /* Changed to 0 to manage internal spacing */
-    display: none;
+    display: none; /* JS will change to 'flex' when shown */
     flex-direction: column;
     min-width: 400px;
     min-height: 500px;
@@ -42,12 +42,12 @@
 }
 
 #wings-ai-main-content {
-    flex: 1;
+    flex: 1 1 auto; /* Allow shrinking to fit footer */
     overflow-y: auto;
     padding: 0 24px; /* Move modal padding here */
     scrollbar-width: thin;
     scrollbar-color: var(--wings-gold-dim) transparent;
-    min-height: 0;
+    min-height: 0; /* Critical: allows flex shrinking */
 }
 
 #wings-ai-main-content::-webkit-scrollbar {
@@ -351,98 +351,105 @@
 
 .wings-ai-actions-row {
     display: flex;
-    gap: 8px;
+    gap: 4px; /* Reduced from 8px */
     align-items: center;
     justify-content: flex-start;
     margin-bottom: 12px;
     padding: 0 4px;
 }
 
-.wings-ai-bottom-actions {
+.wings-ai-textarea-container {
+    position: relative;
+    border-radius: 14px; /* Match textarea border-radius */
+    overflow: hidden; /* Keep buttons inside visual bounds */
+}
+
+.wings-ai-textarea-buttons {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none; /* Allow clicking through the bar */
+}
+
+.wings-ai-textarea-buttons > * {
+    pointer-events: auto; /* Re-enable clicks on buttons */
+}
+
+.wings-ai-textarea-buttons-right {
     display: flex;
     gap: 8px;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: 12px;
-    padding: 0 4px;
 }
 
-.wings-ai-btn-outline {
-    background: transparent;
-    color: #fff;
-    border: 1px solid transparent;
-    padding: 0 12px; /* Reduced specific padding between texts */
-    height: 38px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.wings-ai-btn-outline:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-#wings-conf-lang-toggle:hover {
-    background: rgba(252, 195, 58, 0.1);
-}
-
-/* Ask Wings AI */
-.wings-ai-ask-container {
-    position: relative;
-    margin-top: 12px;
-}
-
-.wings-ai-ask-input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 10px 40px 10px 16px; /* Right padding for button */
-    color: #fff;
-    font-size: 13px;
-    outline: none;
-    transition: all 0.2s;
-}
-
-.wings-ai-ask-input:focus {
-    border-color: var(--wings-gold);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.wings-ai-ask-send-btn {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.1);
+.wings-ai-btn-report {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ef4444;
     border: none;
-    border-radius: 50%; /* Circular */
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--wings-gold);
     transition: all 0.2s;
-    padding: 0;
-    font-size: 14px;
 }
 
-.wings-ai-ask-send-btn:hover {
+.wings-ai-btn-report:hover {
+    background: #ef4444;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.wings-ai-textarea-container textarea {
+    width: 100%;
+    height: 300px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 54px; /* 12px margin + 36px button + 6px clearance = need 54px padding to achieve 12px visual bottom margin */
+    color: var(--wings-text-main);
+    font-family: var(--wings-font);
+    font-size: 15px;
+    line-height: 1.6;
+    resize: none;
+}
+
+.wings-ai-textarea-container textarea:focus {
+    border-color: var(--wings-gold) !important; /* Force golden border */
+    box-shadow: 0 0 0 1px var(--wings-gold) !important; /* Subtle glow */
+    outline: none !important; /* Remove blue browser outline */
+}
+
+.wings-ai-btn-primary,
+.wings-ai-btn-send {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--wings-gold);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.wings-ai-btn-primary:hover,
+.wings-ai-btn-send:hover {
     background: var(--wings-gold);
     color: #000;
-}
-
-.wings-ai-ask-send-btn:disabled {
-    opacity: 0.5;
-    cursor: default;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(252, 195, 58, 0.4);
 }
 
 /* Env Toggle inside Tooltip */
@@ -481,34 +488,86 @@
     box-shadow: 0 0 10px rgba(252, 195, 58, 0.2);
 }
 
-.wings-ai-btn-primary {
-    background: var(--wings-gold);
-    color: #000;
-    border: none;
-    padding: 0 24px;
+/* ... */
+
+.wings-ai-btn-outline {
+    background: transparent;
+    color: #fff;
+    border: 1px solid transparent;
+    padding: 0 8px; /* Reduced from 12px */
     height: 38px;
     border-radius: 10px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 500;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s;
 }
 
-.wings-ai-textarea-container textarea {
-    width: 100%;
-    height: 300px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
-    padding: 20px;
-    color: var(--wings-text-main);
-    font-family: var(--wings-font);
-    font-size: 15px;
-    line-height: 1.6;
-    resize: none;
+.wings-ai-btn-outline:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
 }
+
+#wings-conf-lang-toggle:hover {
+    background: rgba(252, 195, 58, 0.1);
+}
+
+/* Ask Wings AI */
+.wings-ai-ask-container {
+    position: relative;
+    margin-top: 12px;
+}
+
+.wings-ai-ask-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 10px 40px 10px 16px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.wings-ai-ask-input:focus {
+    border-color: var(--wings-gold);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.wings-ai-ask-send-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wings-gold);
+    transition: all 0.2s;
+    padding: 0;
+    font-size: 14px;
+}
+
+.wings-ai-ask-send-btn:hover {
+    background: var(--wings-gold);
+    color: #000;
+}
+
+.wings-ai-ask-send-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
 
 /* Footer / Prefs */
 .wings-ai-prefs-header {
@@ -850,8 +909,10 @@
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
     z-index: 10;
-    flex-shrink: 0;
-    margin-top: auto;
+    flex-shrink: 0 !important; /* Never shrink */
+    flex-grow: 0 !important; /* Never grow */
+    position: relative; /* Natural flow in flex container */
+    margin-top: auto; /* Push to bottom if content is short */
 }
 
 .wings-ai-footer:hover {
@@ -1407,12 +1468,12 @@
 }
 
 .wings-ai-confirm-card {
-    background: #1e1b26;
-    border: 1px solid var(--wings-gold);
-    box-shadow: 0 0 30px rgba(252, 195, 58, 0.2);
-    border-radius: 16px;
-    padding: 24px;
-    width: 320px;
+    background: #0f0a1a; /* Deeper darker background */
+    border: 1px solid rgba(252, 195, 58, 0.3); /* Subtle gold border */
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 20px rgba(252, 195, 58, 0.1);
+    border-radius: 24px;
+    padding: 24px 28px;
+    width: 340px; /* Slightly wider */
     text-align: center;
     transform: scale(0.95);
     animation: wingsPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -1452,10 +1513,11 @@
     display: flex;
     justify-content: space-between;
     font-size: 13px;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     color: var(--wings-text-dim);
-    border-bottom: 1px dashed rgba(255,255,255,0.05);
+    /* border-bottom removed for cleaner look */
     padding-bottom: 4px;
+    align-items: center; /* Vertically align label and input */
 }
 .wings-ai-row:last-child {
     border-bottom: none;
@@ -1468,17 +1530,18 @@
 }
 
 .wings-ai-confirm-input {
-    background: rgba(0, 0, 0, 0.3);
+    background: #050407; /* Almost black */
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
+    border-radius: 8px;
     color: #fff;
-    padding: 4px 8px;
+    padding: 8px 12px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     font-family: inherit;
-    width: 65%;
+    width: 60%; /* Adjusted width */
     text-align: right;
     transition: all 0.2s;
+    outline: none;
 }
 
 .wings-ai-confirm-input:focus {
@@ -1528,12 +1591,120 @@
 
 .wings-ai-confirm-actions {
     display: flex;
-    gap: 12px;
-    justify-content: center;
+    gap: 16px;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
 }
 
-.wings-ai-confirm-actions button {
-    flex: 1;
+#wings-conf-cancel {
+    background: transparent !important;
+    border: none !important;
+    color: #9ca3af !important;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 16px;
+    flex: 0 0 auto;
+}
+
+#wings-conf-cancel:hover {
+    color: #fff !important;
+    text-decoration: none;
+}
+
+#wings-conf-submit {
+    background: linear-gradient(180deg, #b48811 0%, #7c5c0d 100%) !important;
+    color: #fffce8 !important;
+    border: 1px solid rgba(255, 215, 0, 0.2) !important;
+    border-radius: 30px !important;
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+    flex: 1; /* Take remaining space */
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#wings-conf-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(180, 136, 17, 0.4) !important;
+    filter: brightness(1.15);
+}
+
+#wings-conf-time {
+    color: var(--wings-gold) !important;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+#wings-conf-store {
+    color: #fff !important;
+    font-weight: 600;
+}
+
+/* Note Textarea Styling */
+#wings-conf-note, #wings-conf-msg-preview {
+    width: 100%;
+    min-height: 60px;
+    background: #050407 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    color: #fff !important;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none !important;
+    margin-top: 4px;
+}
+
+#wings-conf-note:focus, #wings-conf-msg-preview:focus {
+    border-color: var(--wings-gold-dim) !important;
+    background: rgba(0,0,0,0.6) !important;
+}
+
+/* Success State Buttons */
+#wings-conf-copy-close {
+    background: linear-gradient(180deg, #b48811 0%, #7c5c0d 100%) !important;
+    color: #fffce8 !important;
+    border: 1px solid rgba(255, 215, 0, 0.2) !important;
+    border-radius: 30px !important;
+    padding: 10px 20px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap !important; /* Fix stacking */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+#wings-conf-copy-close:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(180, 136, 17, 0.4) !important;
+    filter: brightness(1.15);
+}
+
+#wings-conf-close-success {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    color: #9ca3af !important;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 16px !important;
+}
+
+#wings-conf-close-success:hover {
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 /* Pulse Animation for Suggested Slots */

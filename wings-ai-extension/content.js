@@ -131,10 +131,11 @@ function createSuggestionModal() {
             </div>
             <div class="wings-ai-header-right">
                 <button class="wings-ai-icon-btn" id="wings-ai-gallery-toggle" title="Image Gallery" style="margin-right: 8px; background: transparent; border: none; color: #fcc33a; cursor: pointer;">
-                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
+                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
                     </svg>
                 </button>
 
@@ -198,13 +199,24 @@ function createSuggestionModal() {
                     <button class="wings-ai-btn-outline" id="wings-ai-combo-summary-btn" title="Summarize Combo" style="display: none;">📦</button>
                 </div>
                 <div class="wings-ai-textarea-container">
+                    <div class="wings-ai-textarea-buttons">
+                        <button class="wings-ai-btn-report" id="wings-ai-report-btn" title="Report Issue">
+                            <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:currentColor;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                        </button>
+                        <div class="wings-ai-textarea-buttons-right">
+                            <button class="wings-ai-btn-primary" id="wings-ai-apply-btn" title="Insert into chat">
+                                <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;">
+                                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                                </svg>
+                            </button>
+                            <button class="wings-ai-btn-send" id="wings-ai-send-btn" title="Send directly to client">
+                                <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                     <textarea id="wings-ai-reply-text" placeholder="Click 'AI Suggestion' above to generate a reply..."></textarea>
-                </div>
-                <div class="wings-ai-bottom-actions">
-                    <button class="wings-ai-btn-outline" id="wings-ai-report-btn" title="Correct AI Mistake" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4); font-size: 11px; padding: 4px 8px;">
-                        <svg viewBox="0 0 24 24" style="width:12px; height:12px; margin-right:4px; fill:currentColor; display:inline-block; vertical-align:middle;"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg> Report
-                    </button>
-                    <button class="wings-ai-btn-primary" id="wings-ai-apply-btn">Insert</button>
                 </div>
             </div>
 
@@ -275,7 +287,7 @@ function createSuggestionModal() {
         </div>
 
         <div class="wings-ai-footer" id="wings-ai-global-footer">
-            <span class="wings-ai-footer-left">POWERED BY WINGS AI v4.1.2</span>
+            <span class="wings-ai-footer-left">POWERED BY WINGS AI v6.6.31</span>
             
             <div class="wings-ai-settings-container" style="margin-left: auto; margin-right: 12px;">
                 <span class="wings-ai-settings-trigger" title="Settings">⚙️</span>
@@ -304,11 +316,16 @@ function createSuggestionModal() {
                         </div>
                     </div>
                      <div class="wings-ai-settings-divider"></div>
-                     <div class="wings-ai-settings-section" style="justify-content: center;">
+                     <div class="wings-ai-settings-section" style="justify-content: center; gap: 8px;">
                         <div class="wings-ai-env-toggle-tooltip">
                             <label><input type="radio" name="api_env" value="orb" checked> Orb</label>
                             <span style="opacity:0.3">|</span>
                             <label><input type="radio" name="api_env" value="live"> Live</label>
+                        </div>
+                        <div class="wings-ai-env-toggle-tooltip" title="Toggle Data Caching (Green = Cached)">
+                            <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                <input type="checkbox" id="wings-ai-cache-toggle" checked style="accent-color: #22c55e;"> ⚡
+                            </label>
                         </div>
                      </div>
                 </div>
@@ -416,7 +433,7 @@ function createSuggestionModal() {
         chrome.storage.sync.set({ lastLangChoice: e.target.value });
     });
 
-    chrome.storage.sync.get(['lastModelChoice', 'lastLangChoice', 'apiEnv'], (result) => {
+    chrome.storage.sync.get(['lastModelChoice', 'lastLangChoice', 'apiEnv', 'dataCacheMode'], (result) => {
         // if (result.lastMyStyle) document.getElementById('wings-ai-style-input').value = result.lastMyStyle;
         if (result.lastModelChoice) document.getElementById('wings-ai-model-choice').value = result.lastModelChoice;
         if (result.lastLangChoice) document.getElementById('wings-ai-lang-choice').value = result.lastLangChoice;
@@ -424,6 +441,12 @@ function createSuggestionModal() {
         if (result.apiEnv) {
             const radio = modal.querySelector(`input[name="api_env"][value="${result.apiEnv}"]`);
             if (radio) radio.checked = true;
+        }
+
+        const cacheToggle = document.getElementById('wings-ai-cache-toggle');
+        if (cacheToggle) {
+            // Default to true if undefined
+            cacheToggle.checked = (result.dataCacheMode !== false);
         }
     });
 
@@ -465,6 +488,10 @@ function createSuggestionModal() {
             chrome.storage.sync.set({ apiEnv: e.target.value });
         });
     });
+
+    safeAddListener('#wings-ai-cache-toggle', 'change', (e) => {
+        chrome.storage.sync.set({ dataCacheMode: e.target.checked });
+    });
     
     // --- ASK WINGS AI LISTENER ---
     const askInput = modal.querySelector('#wings-ai-ask-input');
@@ -479,9 +506,17 @@ function createSuggestionModal() {
         askBtn.disabled = true;
         askInput.disabled = true;
 
+        const clientName = getClientName();
+        const clientPhone = getClientPhone();
+        const clientId = getClientId();
+
         safeSendMessage({
             action: "askWingsAI",
             query: query,
+            clientName: clientName,
+            clientPhone: clientPhone,
+            clientId: clientId,
+            history: getChatHistory(),
             modelChoice: document.getElementById('wings-ai-model-choice').value,
             apiEnv: (window.modalElement?.querySelector('input[name="api_env"]:checked')?.value) || 'orb'
         }, (response) => {
@@ -550,6 +585,139 @@ function createSuggestionModal() {
         });
     } else {
         console.error("[Wings AI] Apply button not found");
+    }
+
+    const sendBtn = modal.querySelector('#wings-ai-send-btn');
+    if (sendBtn) {
+        sendBtn.addEventListener('click', async () => {
+            const text = replyTextarea.value;
+            if (!text) return;
+
+            const originalHtml = sendBtn.innerHTML;
+            
+            try {
+                let pageId, conversationId;
+                
+                // Method 1: Try to extract from URL
+                const urlMatch = window.location.href.match(/\/conversation\/(\d+)_(\d+)/);
+                if (urlMatch) {
+                    pageId = urlMatch[1];
+                    conversationId = `${urlMatch[1]}_${urlMatch[2]}`;
+                } else {
+                    // Method 2: Extract from DOM (active conversation item)
+                    const activeConv = document.querySelector('.conversation-list-item.selected');
+                    if (activeConv && activeConv.id) {
+                        // ID format: {page_id}_{conversation_id}__0
+                        // We need to remove the '__0' suffix for API calls
+                        const fullId = activeConv.id;
+                        // Remove everything after (and including) '__'
+                        const cleanId = fullId.split('__')[0];
+                        const parts = cleanId.split('_');
+                        if (parts.length >= 2) {
+                            pageId = parts[0];
+                            conversationId = cleanId; // Keep format: pageId_threadId
+                        }
+                    }
+                }
+                
+                if (!pageId || !conversationId) {
+                    console.error('[Wings AI] Could not find conversation IDs');
+                    alert('Please select a conversation first');
+                    return;
+                }
+                
+                // Extract access_token from URL params or page context
+                const urlParams = new URLSearchParams(window.location.search);
+                let accessToken = urlParams.get('access_token');
+                
+                // If not in URL, try to find it in page's initial state or localStorage
+                if (!accessToken) {
+                    // Look for it in performance entries of recent API calls
+                    const perfEntries = performance.getEntriesByType('resource');
+                    const apiCall = perfEntries.find(e => e.name.includes('/api/v1/') && e.name.includes('access_token'));
+                    if (apiCall) {
+                        const match = apiCall.name.match(/access_token=([^&]+)/);
+                        if (match) accessToken = match[1];
+                    }
+                }
+                
+                if (!accessToken) {
+                    console.error('[Wings AI] Could not find access token');
+                    alert('Authentication error. Please refresh the page.');
+                    return;
+                }
+                
+                // Get customer_id from URL params
+                let customerId = urlParams.get('customer_id');
+                if (!customerId) {
+                    // Try to extract from recent API calls
+                    const perfEntries = performance.getEntriesByType('resource');
+                    const apiCall = perfEntries.find(e => e.name.includes('customer_id='));
+                    if (apiCall) {
+                        const match = apiCall.name.match(/customer_id=([^&]+)/);
+                        if (match) customerId = match[1];
+                    }
+                }
+                
+                // Build the API request - match native Pancake UI exactly
+                const formData = new FormData();
+                formData.append('action', 'reply_inbox'); // Pancake uses 'reply_inbox', not 'send'
+                formData.append('message', text);
+                formData.append('send_by_platform', 'web'); // Required by native UI
+                // NOTE: NO 'type' parameter - native UI doesn't send it
+                
+                const apiUrl = `https://pancake.vn/api/v1/pages/${pageId}/conversations/${conversationId}/messages?` +
+                              `customer_id=${customerId}&access_token=${accessToken}`;
+                
+                // Debug logging
+                console.log('[Wings AI Send Debug]', {
+                    pageId,
+                    conversationId,
+                    customerId: customerId ? customerId.substring(0,10) + '...' : 'MISSING',
+                    accessToken: accessToken ? 'Present (length: ' + accessToken.length + ')' : 'MISSING',
+                    apiUrl: apiUrl.replace(accessToken, 'TOKEN_REDACTED')
+                });
+                
+                // Visual feedback: disable button and show loading
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '⏳';
+                
+                // Send the message
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Log full response details
+                console.log('[Wings AI Send Response]', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok
+                });
+                
+                if (response.ok) {
+                    const responseData = await response.json();
+                    console.log('[Wings AI] Message sent successfully', responseData);
+                    // Clear the textarea
+                    replyTextarea.value = '';
+                    // Restore button immediately (no checkmark animation)
+                    sendBtn.innerHTML = originalHtml;
+                    sendBtn.disabled = false;
+                } else {
+                    const errorText = await response.text();
+                    console.error('[Wings AI] API Error Response:', errorText);
+                    throw new Error(`API returned ${response.status}: ${errorText.substring(0, 100)}`);
+                }
+                
+            } catch (error) {
+                console.error('[Wings AI] Send error:', error);
+                alert('Failed to send message: ' + error.message);
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = originalHtml;
+            }
+        });
+    } else {
+        console.error("[Wings AI] Send button not found");
     }
 
     // --- REFER BUTTON LISTENER ---
@@ -1593,7 +1761,17 @@ function createSuggestionModal() {
         // Check cache (5 minutes = 300,000ms)
         const now = Date.now();
         const cache = window.modalElement.selectedTechAppointments;
-        const cacheValid = cache && 
+        
+        // Get Cache Mode Setting (Synchronously from UI as it's the source of truth for session)
+        const cacheToggle = document.getElementById('wings-ai-cache-toggle');
+        const isCacheEnabled = cacheToggle ? cacheToggle.checked : true;
+
+        if (!isCacheEnabled) {
+             console.log("[Wings AI] Cache disabled, forcing fetch for tech:", techId);
+        }
+
+        const cacheValid = isCacheEnabled && 
+                          cache && 
                           window.modalElement.appointmentsLastFetched && 
                           (now - window.modalElement.appointmentsLastFetched < 5 * 60 * 1000) &&
                           cache.technicianId === techId &&
@@ -1626,10 +1804,164 @@ function createSuggestionModal() {
                 window.modalElement.appointmentsLastFetched = Date.now();
                 console.log(`[Wings AI] Cached ${response.data.length} appointments`);
                 
-                // Re-render slots to show indicators
-                renderBookingData(selectedBookingStore, apiEnv);
+                // Re-render slots (ONLY) to show indicators, avoiding loop
+                renderSlotsOnly(selectedBookingStore, apiEnv);
             } else {
                 console.warn("[Wings AI] Failed to fetch appointments:", response);
+            }
+        });
+    }
+
+    // New Function: Render Slots Grid Only (Decoupled from Tech Fetch)
+    async function renderSlotsOnly(storeRef, apiEnv) {
+        const slotsContainer = document.getElementById('wings-ai-slots-grid'); 
+
+        // 2. Fetch Slots for Selected Date
+        // Build technicianIds array if a tech is selected
+        const techIds = (window.modalElement && window.modalElement.selectedTechId) 
+            ? [window.modalElement.selectedTechId] 
+            : null;
+        
+        safeSendMessage({ 
+            action: "fetchSlotsOnly", 
+            storeId: storeRef, 
+            from: selectedBookingDate, 
+            to: selectedBookingDate, 
+            technicianIds: techIds,
+            apiEnv: apiEnv 
+        }, (data) => {
+            slotsContainer.className = '';
+            slotsContainer.innerHTML = ''; 
+            
+            if (!data) {
+                slotsContainer.innerHTML = '<div class="wings-ai-loading" style="color:#ef4444">⚠️ Connection Timeout</div>';
+                return;
+            }
+
+            if (data && data.error) {
+                console.error("[Wings AI] Slots Fetch Failed:", data.error);
+                slotsContainer.innerHTML = `<div class="wings-ai-loading" style="color:#ef4444">⚠️ ${data.error}</div>`;
+                return;
+            }
+
+            if (data && data.dates && data.dates[selectedBookingDate]) {
+                const slots = data.dates[selectedBookingDate].slots;
+                const sortedTimes = Object.keys(slots).sort();
+                
+                const morning = [];
+                const afternoon = [];
+                const evening = [];
+
+                sortedTimes.forEach(time => {
+                    const hour = parseInt(time.split(':')[0]);
+                    if (hour < 12) morning.push(time);
+                    else if (hour < 18) afternoon.push(time);
+                    else evening.push(time);
+                });
+
+                // Find Nearest Time for Suggestion (e.g. 11:10 -> 11:15)
+                let bestMatchTime = null;
+                if (window.modalElement && window.modalElement.suggestedTime) {
+                    const suggest = window.modalElement.suggestedTime;
+                    const suggestMins = (h, m) => parseInt(h) * 60 + parseInt(m);
+                    const [sh, sm] = suggest.split(':');
+                    const targetMins = suggestMins(sh, sm);
+                    
+                    let minDiff = Infinity;
+                    sortedTimes.forEach(t => {
+                        // Only suggest if count > 0 (available)
+                        if (slots[t] > 0) {
+                            const [th, tm] = t.split(':');
+                            const diff = Math.abs(suggestMins(th, tm) - targetMins);
+                            if (diff < minDiff) {
+                                minDiff = diff;
+                                bestMatchTime = t;
+                            }
+                        }
+                    });
+                    // Store the result for appendSection to use
+                    window.modalElement.suggestedTimeMatch = bestMatchTime;
+                }
+
+                const appendSection = (title, times) => {
+                    if (times.length === 0) return;
+                    
+                    const section = document.createElement('div');
+                    section.className = 'wings-ai-slot-section';
+
+                    const titleEl = document.createElement('div');
+                    titleEl.className = 'wings-ai-slot-section-title';
+                    titleEl.innerText = `${title}`;
+                    titleEl.innerHTML += ` <span style="font-weight:400; font-size:9px; opacity:0.6; margin-left:4px;">${times[0]} ➝ ${times[times.length-1]}</span>`;
+                    section.appendChild(titleEl);
+
+                    const grid = document.createElement('div');
+                    grid.className = 'wings-ai-slots-grid';
+                    
+                    times.forEach(time => {
+                        const count = slots[time];
+                        const card = document.createElement('div');
+                        card.className = 'wings-ai-slot-card';
+                        
+                        // Smart Highlight: Pulse the BEST MATCH suggested time slot
+                        if (window.modalElement && window.modalElement.suggestedTimeMatch === time) {
+                             card.classList.add('wings-ai-suggested-slot');
+                             // Focus the user's eye
+                             setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 400);
+                        }
+                        
+                        let countClass = 'wings-ai-count-neg'; // Default to Red (<= 0)
+                        if (count === null || count === undefined || isNaN(count)) {
+                            countClass = 'wings-ai-count-zero'; // Grey for systemically blocked
+                        } else if (count >= 3) {
+                            countClass = 'wings-ai-count-high'; // Green
+                        } else if (count > 0) {
+                            countClass = 'wings-ai-count-med'; // Yellow/Gold
+                        }
+
+                        const isHour = time.endsWith(':00');
+
+                        card.innerHTML = `
+                            <div class="wings-ai-slot-time ${isHour ? 'on-hour' : ''}">${time}</div>
+                            <div class="wings-ai-slot-count ${countClass}">${count > 0 ? `+${count}` : count}</div>
+                        `;
+
+                        // Add appointment indicators if technician is selected
+                        if (window.modalElement && window.modalElement.selectedTechAppointments) {
+                            const aptData = window.modalElement.selectedTechAppointments;
+                            const appointmentsAtTime = (aptData.appointments || []).filter(
+                                apt => String(apt.time_booked).substring(0,5) === String(time).substring(0,5)
+                            );
+                            
+                            if (appointmentsAtTime.length > 0) {
+                                console.log(`[Wings AI] Rendering ${appointmentsAtTime.length} appointment(s) at ${time}`);
+                                const indicator = createAppointmentIndicator(appointmentsAtTime);
+                                card.appendChild(indicator);
+                            }
+                        }
+
+                        // OVERBOOKING PROTOCOL: STRICT RULE - Always interactive
+                        card.style.cursor = 'pointer';
+                        card.onclick = () => {
+                            confirmBooking(time);
+                        };
+
+                        grid.appendChild(card);
+                    });
+                    section.appendChild(grid);
+                    slotsContainer.appendChild(section);
+                };
+
+                appendSection('MORNING', morning);
+                appendSection('AFTERNOON', afternoon);
+                appendSection('EVENING', evening);
+
+                if (sortedTimes.length === 0) {
+                     slotsContainer.innerHTML = '<div class="wings-ai-loading">No slots configured.</div>';
+                }
+
+            } else {
+                slotsContainer.innerHTML = '<div class="wings-ai-loading">No availability data.</div>';
             }
         });
     }
@@ -1802,154 +2134,8 @@ function createSuggestionModal() {
             }
         });
 
-        // 2. Fetch Slots for Selected Date
-        // Build technicianIds array if a tech is selected
-        const techIds = (window.modalElement && window.modalElement.selectedTechId) 
-            ? [window.modalElement.selectedTechId] 
-            : null;
-        
-        safeSendMessage({ 
-            action: "fetchSlotsOnly", 
-            storeId: storeRef, 
-            from: selectedBookingDate, 
-            to: selectedBookingDate, 
-            technicianIds: techIds,
-            apiEnv: apiEnv 
-        }, (data) => {
-            slotsContainer.className = '';
-            slotsContainer.innerHTML = ''; 
-            
-            if (!data) {
-                slotsContainer.innerHTML = '<div class="wings-ai-loading" style="color:#ef4444">⚠️ Connection Timeout</div>';
-                return;
-            }
-
-            if (data && data.error) {
-                console.error("[Wings AI] Slots Fetch Failed:", data.error);
-                slotsContainer.innerHTML = `<div class="wings-ai-loading" style="color:#ef4444">⚠️ ${data.error}</div>`;
-                return;
-            }
-
-            if (data && data.dates && data.dates[selectedBookingDate]) {
-                const slots = data.dates[selectedBookingDate].slots;
-                const sortedTimes = Object.keys(slots).sort();
-                
-                const morning = [];
-                const afternoon = [];
-                const evening = [];
-
-                sortedTimes.forEach(time => {
-                    const hour = parseInt(time.split(':')[0]);
-                    if (hour < 12) morning.push(time);
-                    else if (hour < 18) afternoon.push(time);
-                    else evening.push(time);
-                });
-
-                // Find Nearest Time for Suggestion (e.g. 11:10 -> 11:15)
-                let bestMatchTime = null;
-                if (window.modalElement && window.modalElement.suggestedTime) {
-                    const suggest = window.modalElement.suggestedTime;
-                    const suggestMins = (h, m) => parseInt(h) * 60 + parseInt(m);
-                    const [sh, sm] = suggest.split(':');
-                    const targetMins = suggestMins(sh, sm);
-                    
-                    let minDiff = Infinity;
-                    sortedTimes.forEach(t => {
-                        // Only suggest if count > 0 (available)
-                        if (slots[t] > 0) {
-                            const [th, tm] = t.split(':');
-                            const diff = Math.abs(suggestMins(th, tm) - targetMins);
-                            if (diff < minDiff) {
-                                minDiff = diff;
-                                bestMatchTime = t;
-                            }
-                        }
-                    });
-                    // Store the result for appendSection to use
-                    window.modalElement.suggestedTimeMatch = bestMatchTime;
-                }
-
-                const appendSection = (title, times) => {
-                    if (times.length === 0) return;
-                    
-                    const section = document.createElement('div');
-                    section.className = 'wings-ai-slot-section';
-
-                    const titleEl = document.createElement('div');
-                    titleEl.className = 'wings-ai-slot-section-title';
-                    titleEl.innerText = `${title}`;
-                    titleEl.innerHTML += ` <span style="font-weight:400; font-size:9px; opacity:0.6; margin-left:4px;">${times[0]} ➝ ${times[times.length-1]}</span>`;
-                    section.appendChild(titleEl);
-
-                    const grid = document.createElement('div');
-                    grid.className = 'wings-ai-slots-grid';
-                    
-                    times.forEach(time => {
-                        const count = slots[time];
-                        const card = document.createElement('div');
-                        card.className = 'wings-ai-slot-card';
-                        
-                        // Smart Highlight: Pulse the BEST MATCH suggested time slot
-                        if (window.modalElement && window.modalElement.suggestedTimeMatch === time) {
-                             card.classList.add('wings-ai-suggested-slot');
-                             // Focus the user's eye
-                             setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'center' }), 400);
-                        }
-                        
-                        let countClass = 'wings-ai-count-neg'; // Default to Red (<= 0)
-                        if (count === null || count === undefined || isNaN(count)) {
-                            countClass = 'wings-ai-count-zero'; // Grey for systemically blocked
-                        } else if (count >= 3) {
-                            countClass = 'wings-ai-count-high'; // Green
-                        } else if (count > 0) {
-                            countClass = 'wings-ai-count-med'; // Yellow/Gold
-                        }
-
-                        const isHour = time.endsWith(':00');
-
-                        card.innerHTML = `
-                            <div class="wings-ai-slot-time ${isHour ? 'on-hour' : ''}">${time}</div>
-                            <div class="wings-ai-slot-count ${countClass}">${count > 0 ? `+${count}` : count}</div>
-                        `;
-
-                        // Add appointment indicators if technician is selected
-                        if (window.modalElement && window.modalElement.selectedTechAppointments) {
-                            const aptData = window.modalElement.selectedTechAppointments;
-                            const appointmentsAtTime = (aptData.appointments || []).filter(
-                                apt => String(apt.time_booked).substring(0,5) === String(time).substring(0,5)
-                            );
-                            
-                            if (appointmentsAtTime.length > 0) {
-                                console.log(`[Wings AI] Rendering ${appointmentsAtTime.length} appointment(s) at ${time}`);
-                                const indicator = createAppointmentIndicator(appointmentsAtTime);
-                                card.appendChild(indicator);
-                            }
-                        }
-
-                        // OVERBOOKING PROTOCOL: STRICT RULE - Always interactive
-                        card.style.cursor = 'pointer';
-                        card.onclick = () => {
-                            confirmBooking(time);
-                        };
-
-                        grid.appendChild(card);
-                    });
-                    section.appendChild(grid);
-                    slotsContainer.appendChild(section);
-                };
-
-                appendSection('MORNING', morning);
-                appendSection('AFTERNOON', afternoon);
-                appendSection('EVENING', evening);
-
-                if (sortedTimes.length === 0) {
-                     slotsContainer.innerHTML = '<div class="wings-ai-loading">No slots configured.</div>';
-                }
-
-            } else {
-                slotsContainer.innerHTML = '<div class="wings-ai-loading">No availability data.</div>';
-            }
-        });
+        // 2. Fetch Slots for Selected Date via helper
+        renderSlotsOnly(storeRef, apiEnv);
     }
 
 
@@ -1960,15 +2146,28 @@ function createSuggestionModal() {
     const folderInput = modal.querySelector('#wings-ai-folder-input');
     const browseBtn = modal.querySelector('#wings-ai-browse-btn');
     const folderBtn = modal.querySelector('#wings-ai-folder-btn');
+    const uploadStatus = modal.querySelector('#wings-ai-upload-status-text'); // Assuming this element exists for status updates
 
-    browseBtn.addEventListener('click', () => fileInput.click());
-    folderBtn.addEventListener('click', () => folderInput.click());
+    // Add event listeners only if elements exist (they might not exist on all pages)
+    if (browseBtn && fileInput) {
+        browseBtn.addEventListener('click', () => fileInput.click());
+    }
+    if (folderBtn && folderInput) {
+        folderBtn.addEventListener('click', () => folderInput.click());
+    }
 
     // Handle File Selection
     const handleSelect = (e) => {
         if (e.target.files.length > 0) {
             const files = Array.from(e.target.files);
-            // Update count
+            const fileName = files.length === 1 ? files[0].name : `${files.length} files`;
+            if (uploadStatus) {
+                uploadStatus.textContent = `Selected: ${fileName}`;
+                uploadStatus.style.color = 'var(--wings-gold)';
+            }
+            // Original logic for handling files immediately after selection (for drag/drop or direct input)
+            // This part is kept for the existing `handleFile` flow, but the new `uploadBtn` flow will use the files directly.
+            // The `handleFile` function below is for the "Add New Style" card and the old upload zone.
             const countEl = document.getElementById('wings-ai-upload-count');
             if(countEl) {
                 const current = parseInt(countEl.innerText) || 0;
@@ -1978,8 +2177,63 @@ function createSuggestionModal() {
         }
     };
 
-    fileInput.addEventListener('change', handleSelect);
-    folderInput.addEventListener('change', handleSelect);
+    if (fileInput) {
+        fileInput.addEventListener('change', handleSelect);
+    }
+    if (folderInput) {
+        folderInput.addEventListener('change', handleSelect);
+    }
+
+    // Handle Upload Button
+    const uploadBtn = modal.querySelector('#wings-ai-upload-btn');
+    if (uploadBtn && fileInput && folderInput) {
+        uploadBtn.addEventListener('click', async () => {
+            const selectedFiles = fileInput.files.length > 0 ? fileInput.files : folderInput.files;
+            if (selectedFiles.length === 0) {
+                if (uploadStatus) {
+                    uploadStatus.textContent = 'No files selected';
+                    uploadStatus.style.color = '#ef4444';
+                }
+                return;
+            }
+
+            if (uploadStatus) {
+                uploadStatus.textContent = 'Uploading...';
+                uploadStatus.style.color = 'var(--wings-gold)';
+            }
+
+            try {
+                const formData = new FormData();
+                for (let file of selectedFiles) {
+                    formData.append('images[]', file);
+                }
+
+                // Placeholder for actual upload endpoint
+                // This part needs to be replaced with your actual backend upload logic
+                const response = await fetch('YOUR_UPLOAD_ENDPOINT_HERE', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    if (uploadStatus) {
+                        uploadStatus.textContent = 'Upload successful! ✓';
+                        uploadStatus.style.color = '#10b981';
+                    }
+                    fileInput.value = '';
+                    folderInput.value = '';
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error) {
+                if (uploadStatus) {
+                    uploadStatus.textContent = 'Upload failed. Try again.';
+                    uploadStatus.style.color = '#ef4444';
+                }
+                console.error("Upload error:", error);
+            }
+        });
+    }
 
     uploadZone.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -2494,8 +2748,11 @@ function getChatHistory() {
     let lastText = "";
 
     bubbles.forEach(el => {
-        // Skip hidden or empty elements
-        if (el.offsetWidth === 0 || el.innerText.trim().length < 1) return;
+        // Check for images (img tags or background images)
+        const hasImg = el.querySelector('img') || el.querySelector('.attachment-image') || (el.style.backgroundImage && el.style.backgroundImage.includes('url'));
+        
+        // Skip hidden or empty elements (UNLESS it has an image)
+        if (el.offsetWidth === 0 || (el.innerText.trim().length < 1 && !hasImg)) return;
         
         // Skip common UI noise
         if (el.innerText.includes('AI Suggestion') || el.innerText.includes('my style:')) return;
@@ -2517,15 +2774,29 @@ function getChatHistory() {
 
         const sender = isStaff ? "Staff" : "Client";
         
-        // Clean text (remove time, redundant spaces)
-        let text = el.innerText.split('\n')[0].trim(); // Take first line of the bubble
-        if (text.length < 2) return;
+        // Clean text (remove redundant spaces)
+        let text = el.innerText.trim();
         
-        // Prevent duplicate lines from nested divs
-        if (text !== lastText) {
-            lines.push(`${sender}: ${text}`);
-            lastText = text;
+        // Append marker if image detected
+        if (hasImg) {
+            text += " [SENT PHOTO]";
         }
+
+        if (text.length < 2 && !hasImg) return;
+        
+        // Prevent duplicate lines from nested divs (Pancake often nests bubbles)
+        // If the current bubble text is already contained in the previous collected text, or vice-versa
+        if (lastText && (lastText.includes(text) || text.includes(lastText))) {
+            // If the current bubble is longer, it might be the container. Update lastText.
+            if (text.length > lastText.length) {
+                lines[lines.length - 1] = `${sender}: ${text}`;
+                lastText = text;
+            }
+            return;
+        }
+        
+        lines.push(`${sender}: ${text}`);
+        lastText = text;
     });
 
     // 3. Final cleaning: Take the last 20 unique lines
@@ -2904,7 +3175,7 @@ function initWingsAI() {
     });
 
     function proceedWithInit(user) {
-        console.log("Wings AI Approved. Initializing v4.0.0...");
+        console.log("Wings AI Approved. Initializing v4.5...");
         persistentSessionUser = user;
         createFAB();
         createSuggestionModal();

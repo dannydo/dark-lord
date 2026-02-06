@@ -1,4 +1,4 @@
-const VERSION = "4.1.2";
+const VERSION = "6.6.31";
 console.log(`Wings Background Service Worker v${VERSION} (2026 Edition) LOADED`);
 
 // Listen for messages from content script
@@ -64,42 +64,177 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
     if (request.action === "askWingsAI") {
-        handleAskWingsAI(request.query, request.modelChoice, request.apiEnv, sendResponse);
+        handleAskWingsAI(request.query, request.history, request.modelChoice, request.apiEnv, sendResponse);
         return true;
     }
 });
 
-async function handleAskWingsAI(query, modelChoice, apiEnv, sendResponse) {
+async function handleAskWingsAI(query, history, modelChoice, apiEnv, sendResponse) {
     try {
         const fetchEnv = apiEnv || 'orb';
         const sessionKey = `staffUser_${fetchEnv}`;
-        const settings = await chrome.storage.sync.get(['geminiApiKey', sessionKey]);
+        const settings = await chrome.storage.sync.get(['geminiApiKey', 'businessContext', sessionKey]);
         const staffUser = settings[sessionKey];
 
         if (!staffUser || !staffUser.token || staffUser.status !== 'approved') {
             sendResponse({ error: "UNAUTHORIZED_ACCESS", message: `Please log in to ${fetchEnv.toUpperCase()} server.` });
             return;
         }
+
         if (!settings.geminiApiKey) {
-            sendResponse({ error: "API Key logic error." });
+            sendResponse({ error: "Gemini API Key missing!" });
             return;
         }
 
-        const systemInstruction = `
-# ROLE
-You are WINGS AI, the intelligent assistant for the Wings Lashes team.
+        // --- FETCH CONTEXT FOR ASK TOO ---
+        let liveHistoryContext = "";
+        let historyData = null;
+        let bookingSlotsContext = "";
+        let blindfoldWarning = "";
 
-# OBJECTIVE
-Respond directly to the user's query. This could be a request for a draft, a correction, a training example, or a general question.
+        const activeClient = await chrome.storage.local.get(['active_client']);
+        const clientPhone = activeClient.active_client?.phone;
+        const clientName = activeClient.active_client?.name || "Client";
+        const clientId = activeClient.active_client?.id;
+
+        if (clientPhone) {
+            try {
+                historyData = await fetchClientHistory(clientPhone, clientId, apiEnv);
+                if (historyData && !historyData.error) {
+                    let historyLines = [];
+                    if (historyData.last_service_name) historyLines.push(`- Last Service: ${historyData.last_service_name}`);
+                    if (historyData.recent_styles) historyLines.push(`- Preferred Styles: ${historyData.recent_styles}`);
+                    
+                    const isPhoneMissing = !clientPhone || clientPhone.includes('123456789') || clientPhone.toLowerCase().includes('unknown');
+                    const phoneDisplay = isPhoneMissing ? "[MISSING - YOU MUST ASK FOR PHONE NUMBER]" : clientPhone;
+
+                    liveHistoryContext = `
+# CRITICAL CLIENT HISTORY (REAL DATA FROM BACKEND)
+The client ${clientName} (${phoneDisplay}) context:
+${historyLines.join('\n')}
+- Total Completed Services: ${historyData.total_completed || 0}
+- Total Cancellations/No-Shows: ${historyData.total_cancelled || 0}
+- General Staff Notes: ${historyData.general_notes || historyData.notes || 'None'}
+`;
+
+                }
+            } catch (err) { console.error("Context fetch error in handleAskWingsAI:", err); }
+        }
+
+        // --- FETCH SLOTS INDEPENDENTLY ---
+        let overrideStore = null;
+        if (query.match(/(EP|Estella|Quận 2|Q2)/i)) overrideStore = "16"; 
+        if (query.match(/(Q1|Đề Thám|Trần Quang Khải)/i)) overrideStore = "6"; 
+        if (query.match(/(PN|Phú Nhuận|Phan Xích Long)/i)) overrideStore = "2"; 
+        let storeRef = overrideStore || "2"; 
+        
+        try {
+            const todayDate = new Date();
+            const today = todayDate.toISOString().split('T')[0];
+            const tomorrowDate = new Date();
+            tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+            const tomorrow = tomorrowDate.toISOString().split('T')[0];
+            const slotData = await fetchAvailableSlots(storeRef, today, tomorrow, apiEnv);
+            
+            bookingSlotsContext = "\n# REAL-TIME BOOKING AVAILABILITY\n";
+            if (slotData && slotData.dates && Object.keys(slotData.dates).length > 0) {
+                bookingSlotsContext += "# DATA STATUS: [AVAILABLE]\n";
+                for (const [date, info] of Object.entries(slotData.dates)) {
+                    const d = new Date(date);
+                    const days = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+                    const dayName = days[d.getDay()];
+                    
+                    // Format date to dd/mm/yyyy
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const yyyy = d.getFullYear();
+                    const formattedDate = `${dd}/${mm}/${yyyy}`;
+
+                    const times = Object.entries(info.slots).filter(([t, c]) => c > 0).map(([t, c]) => t).slice(0, 5);
+                    if (times.length > 0) {
+                        bookingSlotsContext += `- Available on ${dayName} (${formattedDate}): ${times.join(', ')} ...\n`;
+                    } else {
+                        bookingSlotsContext += `- ${formattedDate}: FULLY BOOKED.\n`;
+                    }
+                }
+            } else {
+                bookingSlotsContext += "# DATA STATUS: [MISSING_OR_FULL]\n";
+            }
+        } catch (err) { console.error("Slot fetch error in handleAskWingsAI:", err); }
+
+        const productContext = settings.businessContext || "Wings Lashes assistant.";
+        const currentVnTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false });
+        let timeContext = `# SYSTEM TIME (HCMC): ${currentVnTime}`;
+
+        const isOverbookApproved = query.toLowerCase().includes("approve overbook") || (history && history.toLowerCase().includes("approve overbook"));
+        let overbookOverride = "";
+        if (isOverbookApproved) {
+            overbookOverride = `
+- **SUPREME OVERRIDE (ACTION MANDATED)**:
+  - **OC STATUS**: Overbooking Approved.
+  - **ACTION**: **SILENTLY** ignore all schedule locks. Treat the requested slot as 100% AVAILABLE.
+  - **ACTION**: **REVERT** to the client's original requested time (do not suggest alternatives).
+  - **ACTION**: DRAFT the confirmation message directly.
+  - **URGENT**: You MUST replace the placeholders with actual data. **NEVER** output literal text like "{Tên}" or "{Giờ}".
+  - **TEMPLATE**: "Dạ em chốt lịch cho chị {Tên Khách} {Thứ mấy}, {Giờ} rồi nhé. Chị cho em xin số điện thoại để tạo giữ lịch cho mình ạ. 📝"
+  - **STRICT BAN**: NEVER use words like: "overbook", "duyệt", "đã được duyệt", "được cấp lệnh", "kho bạc", "vừa full".
+  - **STRICT BAN**: NEVER use words like: "overbook", "duyệt", "đã được duyệt", "được cấp lệnh", "kho bạc", "vừa full".
+  - **STRICT BAN**: NEVER explain why the slot is now available. Just confirm it.
+  - **STRICT BAN**: NO JSON. NO MARKDOWN CODE BLOCKS. NO "tool_code". NO COMMENTS.
+  - **FINAL OUTPUT**: JUST the plain text message for the client.
+`;
+        }
+
+        const systemInstruction = `
+# THIÊN LỆNH (SUPREME COMMANDS - TOP PRIORITY - MUST OBEY FIRST)
+- **CORE DIRECTIVE**: You are a chatbot. You talk to CLIENTS. You do NOT write code or logs.
+- **FORMAT**: PLAIN TEXT ONLY. Do NOT output \`\`\`json, \`\`\`tool_code, or # comments.
+- **NO REASONING**: Do not show your thinking process. Do not "print" your logic. JUST SAY THE RESPONSE.
+${overbookOverride}
+- **RULE 5: NEW CLIENT PROTOCOL (CONSULTATION PHASE)**:
+  - **CONDITION**: If Client is NEW (0 visits) OR asks for Price/Advice/Consultation.
+  - **PHASE 1 LOCKOUT**: Do **NOT** suggest booking slots yet. Do **NOT** use "chốt đơn".
+  - **PRICING RULE**: Do **NOT** list full prices. Ask for "GU" (Style) first.
+  - **SCRIPT (Discovery)**: "Chào chị yêu! Chị mới lần đầu nối mi bên em nên em bật mí tí nè: Ở Wings, tụi em sẽ **chẩn đoán chiến lược** để chọn dáng mi tôn mắt nhất cho chị. 😉 Chị thích gu lộng lẫy đi tiệc (**Glamorous**) hay kiểu siêu tự nhiên như **Doanh nhân** ạ?"
+
+- **RULE 1: SCHEDULE LOCKDOWN (NO SCHEDULE = NO BOOKING)**:
+  - **CONDITION**: Check # DATA STATUS header.
+  - **IF** header is "[MISSING_OR_FULL]" **OR** the specific DATE is marked "FULLY BOOKED":
+    - **NUCLEAR ACTION**: Your **ENTIRE** response MUST be the Referral Script ONLY.
+    - **SCRIPT**: "Dạ hiện tại em chưa check được lịch trống, chị đợi xíu pé Online Consultant sẽ kiểm tra và báo ngay cho mình nha! 🙏"
+
+- **RULE 3: SLOT HONESTY (PROACTIVE REDIRECTION & URGENCY)**:
+  - **CONDITION**: If status is "[AVAILABLE]" **AND** no SUPREME OVERRIDE:
+    - **LOGIC**: If requested time is FULL or NEGATIVE (but listed), you MUST scan for slots **15-30 MINUTES PRIOR** to the requested time.
+  - **PRIORITY**: **STRICTLY SUGGEST EARLIER SLOTS**. Only suggest later slots if absolutely no earlier option exists within 45 mins.
+  - **URGENCY (If only 1 spot left)**: If you are confirming a slot and the availability data shows exactly "1" spot, you MUST add: "May quá chị [Tên] ơi, còn đúng một chỗ cuối cùng cho chị nè!!! 💖"
+  - **SCRIPT (If Time Full)**: "Tiếc quá, [Giờ] bên em vừa hết chỗ rồi ạ. Nhưng may là **[Slot Sớm Hơn]** vẫn còn. Em đặt lịch cho chị sớm hơn xíu nhé."
+
+- **RULE 2: PHONE MANDATE (NO PHONE = NO BOOKING)**:
+  - **CONDITION**: If Client Phone is "[MISSING - YOU MUST ASK FOR PHONE NUMBER]" **AND** the Requested Time is **AVAILABLE** in the data:
+  - **IF** Phone is Missing BUT Slot is Available -> Demand it immediately.
+  - **SCRIPT**: "Dạ em giữ suất cho mình rồi! Chị cho em xin **số điện thoại** để hệ thống ghi danh và gởi tin nhắn xác nhận cho mình liền nha! 📝"
+
+
+
+- **RULE 4: TIME-AWARE GREETINGS (POST-CONFIRMATION)**:
+  - **PLACEMENT**: LAST SENTENCE ONLY.
+  - **STRICT BAN**: NEVER use when Rule 1, 2, or 3 triggers. NEVER use as an Opening.
+
+# ROLE
+${timeContext}
+You are Lola (The Soulful Specialist) - OC of Wings Lashes.
+Expert Nerd with a witty soul.
+
+# BUSINESS CONTEXT
+${productContext}
+${liveHistoryContext}
+${bookingSlotsContext}
 
 # QUERY
 "${query}"
 
-# GUIDELINES
-- If asked to DRAFT, provide the draft clearly.
-- If asked to CORRECT, acknowledge the correction and confirm understanding.
-- If asked a QUESTION, answer it concisely.
-- Tone: Helpful, professional, and "bén" (sharp) if appropriate.
+GOAL: Provide a technical/witty explanation or draft based on THIÊN LỆNH.
 `;
 
         const response = await callGeminiAPI(settings.geminiApiKey, systemInstruction, "Direct Ask Request", modelChoice);
@@ -416,9 +551,12 @@ async function handleGenerateReply(chatHistory, clientName, clientPhone, clientI
                     }
                     if (historyData.first_visit_date) historyLines.push(`- LOYAL CLIENT SINCE: ${historyData.first_visit_date.split(' ')[0]}`);
 
+                    const isPhoneMissing = !clientPhone || clientPhone.includes('123456789') || clientPhone.toLowerCase().includes('unknown');
+                    const phoneDisplay = isPhoneMissing ? "[MISSING - MANDATORY COLLECTION]" : clientPhone;
+
                     liveHistoryContext = `
 # CRITICAL CLIENT HISTORY (REAL DATA FROM BACKEND)
-The client ${clientName} (${clientPhone}) context:
+The client ${clientName} (${phoneDisplay}) context:
 ${historyLines.join('\n')}
 - Total Completed Services: ${historyData.total_completed || 0}
 - Total Cancellations/No-Shows: ${historyData.total_cancelled || 0}
@@ -426,7 +564,14 @@ ${historyLines.join('\n')}
 `;
 
                     // --- V3.5: BOOKING SLOTS & TECHNICIAN INTEGRATION ---
-                    let storeRef = historyData.store_name || "PXL"; 
+                    // --- V6.6.18: DYNAMIC STORE PARSING ---
+                    let overrideStore = null;
+                    const lastUserMsg = chatHistory.split("User:").pop() || "";
+                    if (chatHistory.match(/(EP|Estella|Quận 2|Q2)/i)) overrideStore = "16"; 
+                    if (chatHistory.match(/(Q1|Đề Thám|Trần Quang Khải)/i)) overrideStore = "6"; 
+                    if (chatHistory.match(/(PN|Phú Nhuận|Phan Xích Long)/i)) overrideStore = "2"; 
+
+                    let storeRef = overrideStore || historyData.store_name || "2"; 
                     
                     try {
                         const todayDate = new Date();
@@ -455,19 +600,31 @@ ${historyLines.join('\n')}
                             }
                         }
 
-                        if (slotData && slotData.dates) {
+                        if (slotData && slotData.dates && Object.keys(slotData.dates).length > 0) {
+                            bookingSlotsContext += "# DATA STATUS: [AVAILABLE]\n";
                             for (const [date, info] of Object.entries(slotData.dates)) {
                                 const availableTimes = Object.entries(info.slots)
                                     .filter(([time, count]) => count > 0)
                                     .map(([time, count]) => time)
                                     .slice(0, 10); 
                                 
+                                const d = new Date(date);
+                                // Format date to dd/mm/yyyy
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                const yyyy = d.getFullYear();
+                                const formattedDate = `${dd}/${mm}/${yyyy}`;
+
                                 if (availableTimes.length > 0) {
-                                    bookingSlotsContext += `- Available on ${date}: ${availableTimes.join(', ')} ...\n`;
+                                    const days = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+                                    const dayName = days[d.getDay()];
+                                    bookingSlotsContext += `- Available on ${dayName} (${formattedDate}): ${availableTimes.join(', ')} ...\n`;
                                 } else {
-                                    bookingSlotsContext += `- ${date}: FULLY BOOKED.\n`;
+                                    bookingSlotsContext += `- ${formattedDate}: FULLY BOOKED.\n`;
                                 }
                             }
+                        } else {
+                             bookingSlotsContext += "# DATA STATUS: [MISSING_OR_FULL]\n";
                         }
                     } catch (slotErr) {
                         console.warn("[Wings AI] Failed to fetch slots/techs:", slotErr);
@@ -497,35 +654,116 @@ ${historyLines.join('\n')}
             });
         }
 
-        // V2.2: Memory Execution - History is at the end to ensure it's the last thing AI reads
-        const systemInstruction = `
+                // --- V6.6.11: BLINDFOLD MODE INJECTION ---
+        const hasPhoto = chatHistory.includes("[SENT PHOTO]");
+        let blindfoldWarning = "";
+        if (!hasPhoto) {
+            blindfoldWarning = `
+# SYSTEM ALERT: BLINDFOLD MODE ACTIVATED 🕶️
+- **CONTEXT**: The user has **NOT** sent any photo in this session. You CANNOT see them.
+- **CRITICAL BAN**: You are STRICTLY FORBIDDEN from using visual compliments/diagnoses such as:
+  - "dáng mắt mlem mlem" / "mắt chị đẹp"
+  - "nhìn hình" / "zoom hình" / "full HD"
+  - "táy máy" / "bắt mạch"
+  - "khuôn mặt chị"
+- **ACTION**: If you need to assess their features, you MUST ASK for a photo first.
+- **SAFE FILLER**: Compliment their **TASTE/CHOICE** instead (e.g., "Gu chị chọn đỉnh quá", "Dòng này là best choice").
+`;
+        }
+
+                // --- V6.6.24: TIME AWARENESS INJECTION ---
+        const currentVnTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false });
+        const vnDate = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+        const vnHour = parseInt(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', hour: 'numeric', hour12: false }));
+        
+        let timeContext = `
+# SYSTEM TIME (HCMC): ${currentVnTime}
+- Date: ${vnDate}
+- Current Hour: ${vnHour}h
+- Phase Logic: ${vnHour < 11 ? 'Sáng' : vnHour < 14 ? 'Trưa' : vnHour < 18 ? 'Chiều' : vnHour < 22 ? 'Tối' : 'Đêm'}
+`;
+        const isOverbookApproved = chatHistory.toLowerCase().includes("approve overbook");
+        let overbookOverride = "";
+        if (isOverbookApproved) {
+            overbookOverride = `
+- **SUPREME OVERRIDE (ACTION MANDATED)**:
+  - **OC STATUS**: Overbooking Approved.
+  - **ACTION**: **SILENTLY** ignore all schedule locks. Treat the requested slot as 100% AVAILABLE.
+  - **ACTION**: **REVERT** to the client's original requested time (do not suggest alternatives).
+  - **ACTION**: DRAFT the confirmation message directly.
+  - **URGENT**: You MUST replace the placeholders with actual data. **NEVER** output literal text like "{Tên}" or "{Giờ}".
+  - **TEMPLATE**: "Dạ em chốt lịch cho chị {Tên Khách} {Thứ mấy}, {Giờ} rồi nhé. Chị cho em xin số điện thoại để tạo giữ lịch cho mình ạ. 📝"
+  - **STRICT BAN**: NEVER use words like: "overbook", "duyệt", "đã được duyệt", "được cấp lệnh", "kho bạc", "vừa full".
+  - **STRICT BAN**: NEVER use words like: "overbook", "duyệt", "đã được duyệt", "được cấp lệnh", "kho bạc", "vừa full".
+  - **STRICT BAN**: NEVER explain why the slot is now available. Just confirm it.
+  - **STRICT BAN**: NO JSON. NO MARKDOWN CODE BLOCKS. NO "tool_code". NO COMMENTS.
+  - **FINAL OUTPUT**: JUST the plain text message for the client.
+`;
+        }
+                const systemInstruction = `
+# THIÊN LỆNH (SUPREME COMMANDS - TOP PRIORITY - MUST OBEY FIRST)
+- **CORE DIRECTIVE**: You are a chatbot. You talk to CLIENTS. You do NOT write code or logs.
+- **FORMAT**: PLAIN TEXT ONLY. Do NOT output \`\`\`json, \`\`\`tool_code, or # comments.
+- **NO REASONING**: Do not show your thinking process. Do not "print" your logic. JUST SAY THE RESPONSE.
+${overbookOverride}
+- **RULE 5: NEW CLIENT PROTOCOL (CONSULTATION PHASE)**:
+  - **CONDITION**: If Client is NEW (0 visits) OR asks for Price/Advice/Consultation.
+  - **PHASE 1 LOCKOUT**: Do **NOT** suggest booking slots yet. Do **NOT** use "chốt đơn".
+  - **PRICING RULE**: Do **NOT** list full prices. Ask for "GU" (Style) first.
+  - **SCRIPT (Discovery)**: "Chào chị yêu! Chị mới lần đầu nối mi bên em nên em bật mí tí nè: Ở Wings, tụi em sẽ **chẩn đoán chiến lược** để chọn dáng mi tôn mắt nhất cho chị. 😉 Chị thích gu lộng lẫy đi tiệc (**Glamorous**) hay kiểu siêu tự nhiên như **Doanh nhân** ạ?"
+
+- **RULE 1: SCHEDULE LOCKDOWN (NO SCHEDULE = NO BOOKING)**:
+  - **CONDITION**: Check # DATA STATUS header.
+  - **IF** header is "[MISSING_OR_FULL]" **OR** the specific DATE is marked "FULLY BOOKED":
+    - **NUCLEAR ACTION**: Your **ENTIRE** response MUST be the Mandatory Script ONLY.
+    - **BANNED**: No openings, no persona fluff, no well-wishes.
+    - **MANDATORY SCRIPT**: "Dạ hiện tại em chưa check được lịch trống, chị đợi xíu pé Online Consultant sẽ kiểm tra và báo ngay cho mình nha! 🙏"
+
+- **RULE 3: SLOT HONESTY (PROACTIVE REDIRECTION & URGENCY)**:
+  - **CONDITION**: If status is "[AVAILABLE]" **AND** no SUPREME OVERRIDE:
+    - **LOGIC**: If requested time is **NOT LISTED** in the available data (Full or Invalid), you MUST scan for slots **15-30 MINUTES PRIOR** to the requested time.
+  - **PRIORITY**: **STRICTLY SUGGEST EARLIER SLOTS**. Only suggest later slots if absolutely no earlier option exists within 45 mins.
+  - **URGENCY (If only 1 spot left)**: If you are confirming a slot and the availability data shows exactly "1" spot, you MUST add: "May quá chị [Tên] ơi, còn đúng một chỗ cuối cùng cho chị nè!!! 💖"
+  - **SCRIPT (If Time Full)**: "Tiếc quá, [Giờ] bên em vừa hết chỗ rồi ạ. Nhưng may là **[Slot Sớm Hơn]** vẫn còn. Em đặt lịch cho chị sớm hơn xíu nhé."
+
+- **RULE 2: PHONE MANDATE (NO PHONE = NO CONFIRMATION)**:
+  - **CONDITION**: If Client Phone is "[MISSING - MANDATORY COLLECTION]" **AND** the Requested Time is **AVAILABLE** in the data:
+    - **ACTION**: You are BANNED from confirming the time/booking.
+    - **ACTION**: Demand the phone number immediately.
+    - **MANDATORY SCRIPT**: "Dạ em giữ suất cho mình rồi! Chị cho em xin **số điện thoại** để hệ thống ghi danh và gởi tin nhắn xác nhận cho mình liền nha! 📝"
+
+
+- **RULE 4: TIME-AWARE GREETINGS (POST-CONFIRMATION)**:
+  - **PLACEMENT**: LAST SENTENCE ONLY.
+  - **STRICT BAN**: NEVER use when Rule 1, 2, or 3 triggers. NEVER use as an Opening.
+
 # ROLE
-You are an expert customer support agent for Wings Lashes (Nối Mi Bóng Tối). 
-Business Rules: ${context}
+${timeContext}
+You are Lola (The Soulful Specialist) - OC of Wings Lashes. 
+Expert Nerd with a witty soul. Focus: Booking & Retention.
+
+# BUSINESS CONTEXT
+${context}
 ${correctionPrompt}
 ${liveHistoryContext}
 ${bookingSlotsContext}
- 
+${blindfoldWarning}
+
 # CS OWNERSHIP
-${historyData?.cs_owner ? `Dedicated CS Owner: ${historyData.cs_owner.name}` : `Currently Unassigned (No CS Owner).`}
+${historyData?.cs_owner ? `Dedicated CS Owner: ${historyData.cs_owner.name}` : `Currently Unassigned.`}
 
-# RULES OF ENGAGEMENT
-1. THE 5-SECOND LAUGH RULE: Every greeting must aim to make the client laugh within 5 seconds. Use cheeky, caring, and "bén" (sharp) Vietnamese language. 
-2. PROACTIVE BOOKING: If the client asks to book, mentions a time, or asks for advice on when to come, PROACTIVELY suggest the available slots provided in #REAL-TIME BOOKING AVAILABILITY. 
-   - Rule: If their Favorite Tech is working, prioritize suggesting them. If not, suggest other available slots warmly.
-3. CROSS-CHECK PREFERENCES: Look for words like "tự nhiên", "sexy", "dày", "mỏng" in the Client's messages. If they already said it, DO NOT ASK AGAIN.
-4. PERSONALIZATION: Address the client by name (${clientName}).
-5. STYLE: ${targetStyle}. Tone: ${selectedTones}. 
-6. ${langInstruction}
-7. NO REPETITIVE GREETINGS: If you have already greeted the customer in the last 2-3 messages, DO NOT say "Hi", "Chào", or "Hello" again.
-8. HUMAN-LIKE: Speak naturally and warmly like a real person, not a bot.
-9. ACTIVE PROBING: Suggest 1 proactive question if relevant to keep the conversation moving.
+# ADDITIONAL RULES
+- **BRANCH LIST**: PN (309 PXL), Q1 (159 Đề Thám), Q2 (Estella).
+- **CRISIS SOS**: If client is angry -> Sincere apology + Pivot to HyperLight.
+- **TONE**: Helpful but technical.
+- **FORMAT**: No mid-sentence breaks. Double newline for separation.
+- ${langInstruction}
 
-# CONVERSATION LOG (READ THIS LAST TO RESPOND CORRECTLY)
+# CONVERSATION History
 Client Name: ${clientName}
 ${chatHistory}
 
-GOAL: Reply to the last message. If booking is implied, use the real-time slots to close the sale.
+GOAL: Apply THIÊN LỆNH first. If all rules are met, then respond as Lola.
 `;
 
         // Call Gemini API
@@ -1177,9 +1415,13 @@ async function handleSummarizeCombos(historyData, clientName, modelChoice, sendR
         }).join('\n');
         console.log("[Wings AI] Combo list prepared:", comboList);
 
+        // --- V6.6.24: TIME AWARENESS INJECTION ---
+        const currentVnTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', hour12: false });
+        
         const systemInstruction = `
 # ROLE
-You are a Helpful CS Assistant for Wings Lashes. 
+# SYSTEM TIME: ${currentVnTime}
+You are Lola (The Soulful Specialist) for Wings Lashes. 
 Your goal is to summarize the client's remaining combo sessions for the sales consultant to use.
 
 # DATA
@@ -1188,9 +1430,7 @@ Active Combos:
 ${comboList}
 
 # GOAL
-Write a short, friendly summary in Vietnamese of what the client has left. 
-Encourage them to book their next session. 
-Keep it concise (1-2 sentences). 
+Write a brief, witty summary in Vietnamese. 
 Example: "Dạ chị ${clientName} ơi, hiện tại mình đang còn [số lượng] lần nối và [số lượng] lần dặm trong gói [tên combo] đó ạ. Chị muốn ghé Wings dặm bớt hay nối mới luôn nè?"
 
 # FORMAT

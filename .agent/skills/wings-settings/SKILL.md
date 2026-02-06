@@ -16,6 +16,8 @@ This skill defines the architecture and styling for the unified settings tooltip
 ### 2. Unified Tooltip
 - Contains the tone selection pills.
 - Contains the model and language selectors.
+- Contains the Environment Toggle (Orb / Live).
+- Contains the Data Cache Toggle (⚡) for performance control.
 - Styled with a dark, premium aesthetic to match the extension theme.
 
 ## Implementation Guidelines
